@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<strings>
+    <string id="32000">Subliminal</string>
+    <string id="32001">Usuário</string>
+    <string id="32002">Senha</string>
+
+    <string id="32100">Providers</string>
+    <string id="32110">Addic7ed</string>
+    <string id="32120">Legendas.TV</string>
+    <string id="32130">OpenSubtitles</string>
+    <string id="32140">Podnapisi</string>
+    <string id="32150">Subscenter</string>
+    <string id="32160">TheSubDB</string>
+    <string id="32170">TVSubtitles</string>
+
+    <string id="32200">Avançado</string>
+    <string id="32201">Preferir legendas para deficientes auditivos</string>
+    <string id="32202">Salvar legenda com encoding</string>
+    <string id="32203">Não utilizar código da língua ao salvar legenda</string>
+    <string id="32204">Número de threads</string>
+    <string id="32205">Habilitar logs de depuração</string>
+    <string id="32206">Post-processing script</string>
+</strings>
+</strings>

@@ -1,0 +1,6 @@
+
+*.pyo
+*.pyc
+.idea
+
+sftp-config.json

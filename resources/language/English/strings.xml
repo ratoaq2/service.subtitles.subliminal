@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<strings>
+    <string id="32000">Subliminal</string>
+    <string id="32001">Username</string>
+    <string id="32002">Password</string>
+
+    <string id="32100">Providers</string>
+    <string id="32110">Addic7ed</string>
+    <string id="32120">Legendas.TV</string>
+    <string id="32130">OpenSubtitles</string>
+    <string id="32140">Podnapisi</string>
+    <string id="32150">Subscenter</string>
+    <string id="32160">TheSubDB</string>
+    <string id="32170">TVSubtitles</string>
+
+    <string id="32200">Advanced</string>
+    <string id="32201">Prefer hearing impaired subtitles</string>
+    <string id="32202">Subtitle file encoding</string>
+    <string id="32203">Save subtitle without language code</string>
+    <string id="32204">Maximum number of threads to use</string>
+    <string id="32205">Enable Debug Logs</string>
+    <string id="32206">Post-processing script</string>
+</strings>
