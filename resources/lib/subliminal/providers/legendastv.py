@@ -84,7 +84,7 @@ class LegendasTvProvider(Provider):
             r = self.session.post('%s/login' % self.server_url, data, allow_redirects=False, timeout=TIMEOUT)
             r.raise_for_status()
 
-            soup = ParserBeautifulSoup(r.content, ['lxml', 'html.parser'])
+            soup = ParserBeautifulSoup(r.content, ['html.parser'])
             auth_error = soup.find('div', {'class': 'alert-error'}, text=re.compile(u'.*Usuário ou senha inválidos.*'))
 
             if auth_error:
@@ -330,7 +330,6 @@ class LegendasTvProvider(Provider):
                 r.raise_for_status()
 
                 soup = ParserBeautifulSoup(r.content, ['html.parser'])
-
                 div_tags = soup.find_all('div', {'class': 'f_left'})
 
                 # loop over each div which contains information about a single subtitle
@@ -353,7 +352,7 @@ class LegendasTvProvider(Provider):
                     rating_text = rating_info_match.group(2) if rating_info_match else None
                     rating = int(rating_text) if rating_text and rating_text.isdigit() else None
                     timestamp_info_match = timestamp_info_re.search(div.text)
-                    timestamp_text = timestamp_info_match.group(1) if timestamp_info_match else None
+                    timestamp = timestamp_info_match.group(1) if timestamp_info_match else None
 
                     # Using the candidate name to filter out bad candidates
                     # (wrong type, wrong episode, wrong season or even wrong title)
@@ -365,7 +364,7 @@ class LegendasTvProvider(Provider):
                     # Unfortunately, the only possible way to know the release names of a specific candidate is to
                     # download the compressed file (rar/zip) and list the file names.
                     handler = LegendasTvArchiveHandler(self)
-                    subtitle_names = handler.get_subtitle_names(subtitle_id, timestamp_text)
+                    subtitle_names = handler.get_subtitle_names(subtitle_id, timestamp)
 
                     if not subtitle_names:
                         continue
@@ -382,7 +381,7 @@ class LegendasTvProvider(Provider):
                                                       imdb_id=candidate.get('imdb_id'), type=candidate.get('type'),
                                                       season=candidate.get('season'), year=candidate.get('year'),
                                                       no_downloads=no_downloads, rating=rating, featured=featured,
-                                                      multiple_episodes=multiple_episodes, timestamp=timestamp_text)
+                                                      multiple_episodes=multiple_episodes, timestamp=timestamp)
 
                         logger.debug('Found subtitle %s', subtitle)
                         subtitles.append(subtitle)
@@ -425,10 +424,12 @@ class LegendasTvProvider(Provider):
         :rtype: `list` of `string`
 
         """
-        return self._uncompress(
-            content,
-            lambda cf: [f for f in cf.namelist()
-                        if 'legendas.tv' not in f.lower() and f.lower().endswith(SUBTITLE_EXTENSIONS)])
+        cf = self.get_compressed_file(content)
+        if cf:
+            # open the compressed file
+            with cf:
+                return [f for f in cf.namelist()
+                        if 'legendas.tv' not in f.lower() and f.lower().endswith(SUBTITLE_EXTENSIONS)]
 
     def extract_subtitle(self, content, subtitle_name):
         """
@@ -441,14 +442,16 @@ class LegendasTvProvider(Provider):
         :rtype : `string`
 
         """
-        return self._uncompress(content, lambda cf, name: fix_line_ending(cf.read(name)), subtitle_name)
+        cf = self.get_compressed_file(content)
+        if cf:
+            # open the compressed file
+            with self.get_compressed_file(content) as cf:
+                return fix_line_ending(cf.read(subtitle_name))
 
-    def _uncompress(self, content, function, *args, **kwargs):
+    def get_compressed_file(self, content):
         bc = io.BytesIO(content)
 
-        cf = RarFile(bc) if is_rarfile(bc) else (ZipFile(bc) if is_zipfile(bc) else None)
-
-        return function(cf, *args, **kwargs) if cf else None
+        return RarFile(bc) if is_rarfile(bc) else (ZipFile(bc) if is_zipfile(bc) else None)
 
     def download_content(self, subtitle_id, timestamp):
         """
