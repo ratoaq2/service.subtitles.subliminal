@@ -445,7 +445,7 @@ class LegendasTvProvider(Provider):
         cf = self.get_compressed_file(content)
         if cf:
             # open the compressed file
-            with self.get_compressed_file(content) as cf:
+            with cf:
                 return fix_line_ending(cf.read(subtitle_name))
 
     def get_compressed_file(self, content):
