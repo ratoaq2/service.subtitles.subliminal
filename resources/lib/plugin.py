@@ -34,7 +34,7 @@ class SubliminalPlugin(object):
             logger.addHandler(logging.FileHandler(log_file, 'a'))
 
     def get_video(self, path):
-        return scan_video(path, subtitles=False, embedded_subtitles=False)
+        return scan_video(path, subtitles=False)
 
     def get_providers(self):
         return [p for p in provider_manager.names() if addon.getSetting(p) == 'true']
