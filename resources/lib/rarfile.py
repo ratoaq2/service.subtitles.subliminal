@@ -1,10 +1,13 @@
 # -*- coding: UTF-8 -*-
+from gio._gio import Error
+
 import xbmc
 import os
 import shutil
 import tempfile
 
 import xbmcaddon
+import xbmcvfs
 
 __addon__ = xbmcaddon.Addon()
 __profile__ = xbmc.translatePath(__addon__.getAddonInfo('profile')).decode('utf-8')
@@ -36,7 +39,6 @@ class RarFile(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        pass
         try:
             os.remove(self.rar_file)
         finally:
@@ -50,3 +52,7 @@ class RarFile(object):
         target_file = os.path.join(self.extract_path, name)
         with open(target_file, 'r') as f:
             return f.read()
+
+
+class NotRarFile(Error):
+    pass

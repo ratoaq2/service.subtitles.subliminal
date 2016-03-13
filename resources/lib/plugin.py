@@ -10,14 +10,17 @@ import traceback
 
 from language import LanguageConverter
 from subprocess import check_output, CalledProcessError, STDOUT
-from subliminal import region, scan_video, save_subtitles, download_subtitles, compute_score
-from subliminal.core import get_subtitle_path, provider_manager, AsyncProviderPool
+from subliminal import AsyncProviderPool, Episode, compute_score, download_subtitles, provider_manager, refine, \
+    refiner_manager, region, save_subtitles, scan_video
+from subliminal.core import get_subtitle_path
 from subliminal.score import episode_scores, movie_scores
-from subliminal.video import Episode
 
 language_converter = LanguageConverter()
 
 addon = xbmcaddon.Addon()
+
+episode_refiners = ('metadata', 'release', 'tvdb', 'omdb')
+movie_refiners = ('metadata', 'release', 'omdb')
 
 
 class SubliminalPlugin(object):
@@ -28,13 +31,16 @@ class SubliminalPlugin(object):
 
     def configure(self, cache_file, log_file):
         region.configure('dogpile.cache.dbm', arguments={'filename': cache_file})
+        refiner_manager.register('release = release_refiner:refine')
         if addon.getSetting('subliminal.debug') == 'true':
             logger = logging.getLogger('subliminal')
             logger.setLevel(level=logging.DEBUG)
             logger.addHandler(logging.FileHandler(log_file, 'a'))
 
     def get_video(self, path):
-        return scan_video(path, subtitles=False)
+        video = scan_video(path)
+        refine(video, episode_refiners=episode_refiners, movie_refiners=movie_refiners, embedded_subtitles=False)
+        return video
 
     def get_providers(self):
         return [p for p in provider_manager.names() if addon.getSetting(p) == 'true']
@@ -95,12 +101,18 @@ class SubliminalPlugin(object):
         download_subtitles([subtitle])
         save_subtitles(video, [subtitle], directory=temp_folder, encoding=encoding if encoding else None)
         subtitle_path = xbmc.translatePath(get_subtitle_path(video.name, subtitle.language)).decode('utf-8')
+        xbmc.log('temp_folder: %s' % temp_folder, level=xbmc.LOGDEBUG)
         xbmc.log('subtitle_path: %s' % subtitle_path, level=xbmc.LOGDEBUG)
         temp_path = os.path.join(temp_folder, os.path.basename(subtitle_path))
         xbmc.log('temp_path: %s' % temp_path, level=xbmc.LOGDEBUG)
         self.post_process(temp_path, subtitle.language, encoding)
-        listitem = xbmcgui.ListItem(label2=os.path.basename(temp_path))
-        xbmcplugin.addDirectoryItem(handle=self.handle, url=temp_path, listitem=listitem, isFolder=False)
+
+        sub_basename = os.path.basename(subtitle_path)
+        sub_url = temp_path
+        xbmc.log('Subtitle url %s' % sub_url, xbmc.LOGDEBUG)
+
+        listitem = xbmcgui.ListItem(label2=sub_basename)
+        xbmcplugin.addDirectoryItem(handle=self.handle, url=sub_url, listitem=listitem, isFolder=False)
 
     def post_process(self, subtitle_path, language, encoding):
         scripts = addon.getSetting('subliminal.post_processing_script')
