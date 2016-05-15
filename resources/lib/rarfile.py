@@ -55,4 +55,12 @@ class RarFile(object):
 
 
 class NotRarFile(Error):
-    pass
+    """The file is not RAR archive."""
+
+
+class RarExecError(Error):
+    """Problem reported by unrar/rar."""
+
+
+class RarCannotExec(RarExecError):
+    """Executable not found."""
