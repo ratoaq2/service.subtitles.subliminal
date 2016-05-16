@@ -28,6 +28,16 @@ class RarFile(object):
         self.fp = fp
 
     def __enter__(self):
+        self._extract()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self._remove()
+
+    def _extract(self):
+        if self.rar_file or self.extract_path:
+            return
+
         self.rar_file = tempfile.mkstemp(suffix='.rar', dir=__temp__)[1]
         self.extract_path = tempfile.mkdtemp(dir=__temp__)
 
@@ -36,22 +46,30 @@ class RarFile(object):
 
         xbmc.executebuiltin('XBMC.Extract(%s, %s)' % (self.rar_file, self.extract_path))
         xbmc.sleep(1000)
-        return self
 
-    def __exit__(self, type, value, traceback):
+    def _remove(self):
+        if not self.rar_file and not self.extract_path:
+            return
+
         try:
             os.remove(self.rar_file)
+            self.rar_file = None
         finally:
             shutil.rmtree(self.extract_path)
+            self.self.extract_path = None
 
     def namelist(self):
+        self._extract()
         return [os.path.join(dp, f).replace(self.extract_path + '/', '', 1)
                 for dp, dn, fn in os.walk(self.extract_path) for f in fn]
 
     def read(self, name):
-        target_file = os.path.join(self.extract_path, name)
-        with open(target_file, 'r') as f:
-            return f.read()
+        try:
+            target_file = os.path.join(self.extract_path, name)
+            with open(target_file, 'r') as f:
+                return f.read()
+        finally:
+            self._remove()
 
 
 class NotRarFile(Error):
